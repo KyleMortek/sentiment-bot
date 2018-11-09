@@ -90,8 +90,8 @@ function createMessage( sentiments ) {
   }
 
   text += '```';
-  text += `\n${lowest.name} you gotta chill the fuck out\n`;
-  text += `\n:dirtydan: # of times Dan said ${danWords.join(', ')}: `;
+  text += `\n\n${lowest.name} you gotta chill the fuck out\n`;
+  text += `\n\n:dirtydan: # of times Dan said ${danWords.join(', ')}: `;
   text += sentiments.danKeywordCount;
 
   return text;
