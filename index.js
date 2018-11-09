@@ -1,3 +1,5 @@
+'use strict';
+
 const { WebClient }         = require('@slack/client');
 const { SentimentAnalyzer } = require('natural');
 const stemmer               = require('natural').PorterStemmer;
