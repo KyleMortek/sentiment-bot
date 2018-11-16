@@ -10,6 +10,9 @@ const slack    = new WebClient( conf.slack_token );
 const users    = new Map();
 const messages = new Set();
 
+const dontPost  = Boolean( conf.dont_post );
+const useSample = Boolean( conf.use_sample );
+
 const danWords = [
   'gym',
   'workout',
@@ -23,7 +26,7 @@ const danWords = [
 ];
 
 function fetchMessages( oldest ) {
-  if ( process.env.SAMPLE ) {
+  if ( useSample ) {
     const sample = require('./sample');
     console.log('Loaded sample data');
     return { messages: sample };
@@ -31,6 +34,7 @@ function fetchMessages( oldest ) {
 
   return slack.channels.history({
     channel: conf.channel,
+    count:   1000,
     oldest:  ( new Date( Date.now - 7 * 24 * 3.6e6 ) ).getTime()
   });
 }
@@ -123,7 +127,11 @@ async function handler() {
 
     const message = createMessage( sentiments );
 
-    await postToSlack( message );
+    if ( !dontPost ) {
+      await postToSlack( message );
+    } else {
+      console.log( message );
+    }
   } catch ( err ) {
     console.log( err );
   }
