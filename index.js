@@ -148,6 +148,4 @@ async function handler() {
   }
 }
 
-handler();
-
-// module.exports = { handler };
+module.exports = { handler };
