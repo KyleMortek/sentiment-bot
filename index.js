@@ -59,7 +59,12 @@ function analyze() {
   let danKeywordCount   = 0;
 
   for ( const { text, user } of messages ) {
-    const sentiment = analyzer.getSentiment( text.split(' ') );
+    let sentiment = analyzer.getSentiment( text.split(' ') );
+
+    // increase magnitude so scores arent so close
+    if ( sentiment >= 1 || sentiment <= -1 ) {
+      sentiment *= Math.abs( sentiment );
+    }
 
     if ( user === 'U30T7S4HF' ) {
       if ( danWords.some( keyword => text.includes( keyword ) ) ) {
@@ -90,9 +95,7 @@ function createMessage( sentiments ) {
 
     text += `${(name + ':').padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
 
-    if ( sentiment < lowest.sentiment ) {
-      lowest = { name, sentiment };
-    }
+    lowest = sentiment < lowest.sentiment ? { name, sentiment } : lowest;
   }
 
   text += '```';
@@ -108,11 +111,19 @@ async function postToSlack( text ) {
 }
 
 async function handler() {
+
   try {
     const { messages: data } = await fetchMessages();
 
     for ( const message of data ) {
-      if ( !message.text || message.text === '' || !message.user ) {
+      const slackbot = 'USLACKBOT';
+
+      if (
+        !message.text
+        || message.text === ''
+        || !message.user
+        || message.user === slackbot
+      ) {
         continue;
       }
 
@@ -137,4 +148,6 @@ async function handler() {
   }
 }
 
-module.exports = { handler };
+handler();
+
+// module.exports = { handler };
