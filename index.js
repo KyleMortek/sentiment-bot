@@ -4,6 +4,7 @@ const { WebClient }         = require('@slack/client');
 const { SentimentAnalyzer } = require('natural');
 const stemmer               = require('natural').PorterStemmer;
 const conf                  = require('./config');
+const https                 = require('https');
 
 const analyzer = new SentimentAnalyzer( 'English', stemmer, 'afinn' );
 const slack    = new WebClient( conf.slack_token );
@@ -83,27 +84,112 @@ function analyze() {
   return { sentimentByUser, danKeywordCount };
 }
 
-function createMessage( sentiments ) {
-  let lowest = { name: '', sentiment: Infinity };
-  let text   = '*Sentiment of last 1000 messages or 7 days*';
+function getGiphy() {
+  const apiKey = 'cZZ6JniHrox8Fnxp6DKMy2gOcKP3IfJY';
+  const term   = 'bad+attitude';
+  const base   = `https://api.giphy.com/v1/gifs/search?q=${term}`;
+  const rating = 'g';
+  const url    = `${base}&api_key=${apiKey}&rating=${rating}&limit=1`;
 
-  text += '\n(lower=negative, higher=positive):\n';
-  text += '```\n';
+  return new Promise( ( resolve, reject ) => {
+    let full = '';
+
+    const req = https.get( url, res => {
+      res.on( 'data', chunk => full += chunk );
+
+      res.on( 'end', () => {
+        const parsed = JSON.parse( full );
+        return resolve( parsed.data[ 0 ].images.original.url );
+      });
+    });
+
+    req.on( 'error', e => {
+      console.log( 'Giphy related error: ', e );
+      return reject();
+    });
+
+    req.end();
+  });
+}
+
+async function createMessage( sentiments ) {
+  const msgBlocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '*Sentiment of the last 1000 messages or 7 days* :hammer_time:'
+      }
+    },
+    {
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: ':grey_question: Lower = negative, Higher = positive'
+        }
+      ]
+    },
+    {
+      type: 'divider'
+    }
+  ];
+
+  let lowest = { name: '', sentiment: Infinity };
+  let scores = '```';
 
   for ( const [ user, sentiment ] of sentiments.sentimentByUser ) {
     const { user: { real_name: name } } = users.get( user );
 
-    text += `${(name + ':').padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
+    scores += `${(name + ':').padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
 
     lowest = sentiment < lowest.sentiment ? { name, sentiment } : lowest;
   }
 
-  text += '```';
-  text += `\n\n${lowest.name} you gotta chill the fuck out\n`;
-  text += `\n\n:dirtydan: # of times Dan said ${danWords.join(', ')}: `;
-  text += sentiments.danKeywordCount;
+  scores += '```';
 
-  return text;
+  msgBlocks.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: scores
+    }
+  });
+
+  msgBlocks.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `:biohazard_sign: *_${lowest.name} toxic again this week._*`
+    }
+  });
+
+  const gifUrl = await getGiphy();
+
+  msgBlocks.push({
+    type: 'image',
+    image_url: gifUrl,
+    alt_text: 'Bad attitude'
+  });
+
+  msgBlocks.push({ type: 'divider' });
+
+  const danText = `# of times Dan said ${danWords.join(', ')}:`;
+
+  msgBlocks.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `${danText} ${sentiments.danKeywordCount}`
+    },
+    accessory: {
+      type: 'image',
+      image_url: 'https://emoji.slack-edge.com/T2L7MHMEG/dirtydan/62380b71e4c8b3a2.jpg',
+      alt_text: 'Dirty dan'
+    }
+  });
+
+  return JSON.stringify( msgBlocks );
 }
 
 async function postToSlack( text ) {
@@ -136,7 +222,7 @@ async function handler() {
 
     console.log('\nFinished analyzing\n');
 
-    const message = createMessage( sentiments );
+    const message = await createMessage( sentiments );
 
     if ( !dontPost ) {
       await postToSlack( message );
