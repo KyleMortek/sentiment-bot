@@ -11,7 +11,7 @@ const slack    = new WebClient( conf.slack_token );
 const users    = new Map();
 const messages = new Set();
 
-const dontPost  = Boolean( conf.dont_post );
+const dontPost  = conf.dont_post === 'true';
 const useSample = Boolean( conf.use_sample );
 
 const danWords = [
@@ -86,10 +86,10 @@ function analyze() {
 
 function getGiphy() {
   const apiKey = 'cZZ6JniHrox8Fnxp6DKMy2gOcKP3IfJY';
-  const term   = 'bad+attitude';
+  const term   = 'no bitch';
   const base   = `https://api.giphy.com/v1/gifs/search?q=${term}`;
-  const rating = 'g';
-  const url    = `${base}&api_key=${apiKey}&rating=${rating}&limit=1`;
+  const rating = 'PG-13';
+  const url    = `${base}&api_key=${apiKey}&rating=${rating}&limit=25`;
 
   return new Promise( ( resolve, reject ) => {
     let full = '';
@@ -99,7 +99,8 @@ function getGiphy() {
 
       res.on( 'end', () => {
         const parsed = JSON.parse( full );
-        return resolve( parsed.data[ 0 ].images.original.url );
+        const rand   =  Math.floor( Math.random() * Math.floor( 25 ) );
+        return resolve( parsed.data[ rand ].images.fixed_height.url );
       });
     });
 
@@ -192,8 +193,8 @@ async function createMessage( sentiments ) {
   return JSON.stringify( msgBlocks );
 }
 
-async function postToSlack( text ) {
-  return slack.chat.postMessage({ channel: conf.sentiment_channel, text });
+async function postToSlack( blocks ) {
+  return slack.chat.postMessage({ channel: conf.sentiment_channel, blocks });
 }
 
 async function handler() {
