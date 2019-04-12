@@ -15,15 +15,13 @@ const dontPost  = conf.dont_post === 'true';
 const useSample = Boolean( conf.use_sample );
 
 const danWords = [
-  'gym',
+  'oof',
   'workout',
-  'working out',
-  'exercise',
-  'lifting',
-  'sore',
-  'routine',
-  'push pull',
-  'work out'
+  'work out',
+  'sick',
+  'fever',
+  'tonsilitis',
+  'good point'
 ];
 
 function fetchMessages( oldest ) {
@@ -68,7 +66,9 @@ function analyze() {
     }
 
     if ( user === 'U30T7S4HF' ) {
-      if ( danWords.some( keyword => text.includes( keyword ) ) ) {
+      const toCompare = text.toLowerCase();
+
+      if ( danWords.some( keyword => toCompare.includes( keyword ) ) ) {
         danKeywordCount += 1;
       }
     }
@@ -121,18 +121,6 @@ async function createMessage( sentiments ) {
         type: 'mrkdwn',
         text: '*Sentiment of the last 1000 messages or 7 days* :hammer_time:'
       }
-    },
-    {
-      type: 'context',
-      elements: [
-        {
-          type: 'mrkdwn',
-          text: ':grey_question: Lower = negative, Higher = positive'
-        }
-      ]
-    },
-    {
-      type: 'divider'
     }
   ];
 
@@ -161,7 +149,7 @@ async function createMessage( sentiments ) {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `:biohazard_sign: *_${lowest.name} toxic again this week._*`
+      text: `:biohazard_sign: *${lowest.name} toxic again this week.*`
     }
   });
 
