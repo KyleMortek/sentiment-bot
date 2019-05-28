@@ -21,7 +21,8 @@ const danWords = [
   'sick',
   'fever',
   'tonsilitis',
-  'good point'
+  'good point',
+  'lads'
 ];
 
 function fetchMessages( oldest ) {
