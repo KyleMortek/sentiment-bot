@@ -87,7 +87,7 @@ function analyze() {
 
 function getGiphy() {
   const apiKey = 'cZZ6JniHrox8Fnxp6DKMy2gOcKP3IfJY';
-  const term   = 'no bitch';
+  const term   = 'asshole';
   const base   = `https://api.giphy.com/v1/gifs/search?q=${term}`;
   const rating = 'PG-13';
   const url    = `${base}&api_key=${apiKey}&rating=${rating}&limit=25`;
@@ -187,19 +187,13 @@ async function postToSlack( blocks ) {
 }
 
 async function handler() {
-
   try {
     const { messages: data } = await fetchMessages();
 
     for ( const message of data ) {
       const slackbot = 'USLACKBOT';
 
-      if (
-        !message.text
-        || message.text === ''
-        || !message.user
-        || message.user === slackbot
-      ) {
+      if ( !message.text || !message.user || message.user === slackbot ) {
         continue;
       }
 
