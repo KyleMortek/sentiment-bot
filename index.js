@@ -20,7 +20,7 @@ const danWords = [
   'work out',
   'sick',
   'fever',
-  'tonsilitis',
+  'gym',
   'good point',
   'lads'
 ];
