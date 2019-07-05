@@ -1,6 +1,6 @@
 'use strict';
 
-const { WebClient }         = require('@slack/client');
+const { WebClient }         = require('@slack/web-api');
 const { SentimentAnalyzer } = require('natural');
 const stemmer               = require('natural').PorterStemmer;
 const conf                  = require('./config');
@@ -126,7 +126,7 @@ async function createMessage( sentiments ) {
   ];
 
   let lowest = { name: '', sentiment: Infinity };
-  let scores = '```';
+  let scores = '```                                    \n';
 
   for ( const [ user, sentiment ] of sentiments.sentimentByUser ) {
     const { user: { real_name: name } } = users.get( user );
