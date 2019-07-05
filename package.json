@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/client": "4.8.0",
+    "@slack/web-api": "5.0.1",
     "natural": "0.6.1"
   }
 }
