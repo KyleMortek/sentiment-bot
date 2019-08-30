@@ -63,7 +63,7 @@ function analyze() {
       sentiment *= Math.abs( sentiment );
     }
 
-    if ( user === 'U30T7S4HF' ) {
+    if ( user === 'U2L89TVUJ' ) {
       const toCompare = text.toLowerCase();
 
       if ( desWords.some( keyword => toCompare.includes( keyword ) ) ) {
@@ -168,11 +168,6 @@ async function createMessage( sentiments ) {
     text: {
       type: 'mrkdwn',
       text: `${desText} ${sentiments.desKeywordCount}`
-    },
-    accessory: {
-      type: 'image',
-      image_url: 'https://emoji.slack-edge.com/T2L7MHMEG/dirtydan/62380b71e4c8b3a2.jpg',
-      alt_text: 'Dirty dan'
     }
   });
 
