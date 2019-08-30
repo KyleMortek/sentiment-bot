@@ -14,15 +14,12 @@ const messages = new Set();
 const dontPost  = conf.dont_post === 'true';
 const useSample = Boolean( conf.use_sample );
 
-const danWords = [
-  'oof',
-  'workout',
-  'work out',
-  'sick',
-  'fever',
-  'gym',
-  'good point',
-  'lads'
+const desWords = [
+  'keyboard',
+  'keeb',
+  'kb',
+  'keycaps',
+  'key caps',
 ];
 
 function fetchMessages( oldest ) {
@@ -56,7 +53,7 @@ function analyze() {
   const empty           = [ ...users.keys() ].map( key => ( [ key, 0 ] ) );
   const sentimentByUser = new Map( empty );
   const messageCounts   = new Map( empty );
-  let danKeywordCount   = 0;
+  let desKeywordCount   = 0;
 
   for ( const { text, user } of messages ) {
     let sentiment = analyzer.getSentiment( text.split(' ') );
@@ -66,11 +63,11 @@ function analyze() {
       sentiment *= Math.abs( sentiment );
     }
 
-    if ( user === 'U30T7S4HF' ) {
+    if ( user === 'U2L89TVUJ' ) {
       const toCompare = text.toLowerCase();
 
-      if ( danWords.some( keyword => toCompare.includes( keyword ) ) ) {
-        danKeywordCount += 1;
+      if ( desWords.some( keyword => toCompare.includes( keyword ) ) ) {
+        desKeywordCount += 1;
       }
     }
 
@@ -82,7 +79,7 @@ function analyze() {
     sentimentByUser.set( user, ( sentiment / messageCounts.get( user ) ) );
   }
 
-  return { sentimentByUser, danKeywordCount };
+  return { sentimentByUser, desKeywordCount };
 }
 
 function getGiphy() {
@@ -164,18 +161,13 @@ async function createMessage( sentiments ) {
 
   msgBlocks.push({ type: 'divider' });
 
-  const danText = `# of times Dan said ${danWords.join(', ')}:`;
+  const desText = `# of times Des said ${desWords.join(', ')}:`;
 
   msgBlocks.push({
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `${danText} ${sentiments.danKeywordCount}`
-    },
-    accessory: {
-      type: 'image',
-      image_url: 'https://emoji.slack-edge.com/T2L7MHMEG/dirtydan/62380b71e4c8b3a2.jpg',
-      alt_text: 'Dirty dan'
+      text: `${desText} ${sentiments.desKeywordCount}`
     }
   });
 
