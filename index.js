@@ -14,26 +14,27 @@ const messages = new Set();
 const dontPost  = conf.dont_post === 'true';
 const useSample = Boolean( conf.use_sample );
 
-const desWords = [
-  'keyboard',
-  'keeb',
-  'kb',
-  'keycaps',
-  'key caps',
+const keywordUser = 'Kyle';
+const keywordID   = 'U3S7MV71A';
+
+const weeklyWords = [
+  'tit',
+  'tits',
+  'bmw',
+  'loan',
+  'loans',
+  'fucking',
+  'fuck'
 ];
 
-function fetchMessages( oldest ) {
-  if ( useSample ) {
-    const sample = require('./sample');
-    console.log('Loaded sample data');
-    return { messages: sample };
-  }
-
-  return slack.channels.history({
+async function fetchMessages( latest = Date.now() ) {
+  const response = await slack.channels.history({
     channel: conf.channel,
     count:   1000,
-    oldest:  ( new Date( Date.now - 7 * 24 * 3.6e6 ) ).getTime()
+    latest
   });
+
+  return response.messages;
 }
 
 async function fetchUsers() {
@@ -53,21 +54,21 @@ function analyze() {
   const empty           = [ ...users.keys() ].map( key => ( [ key, 0 ] ) );
   const sentimentByUser = new Map( empty );
   const messageCounts   = new Map( empty );
-  let desKeywordCount   = 0;
+  let keywordCount   = 0;
 
   for ( const { text, user } of messages ) {
     let sentiment = analyzer.getSentiment( text.split(' ') );
 
     // increase magnitude so scores arent so close
     if ( sentiment >= 1 || sentiment <= -1 ) {
-      sentiment *= Math.abs( sentiment );
+      sentiment *= Math.abs( sentiment ) ** 2;
     }
 
-    if ( user === 'U2L89TVUJ' ) {
+    if ( user === keywordID ) {
       const toCompare = text.toLowerCase();
 
-      if ( desWords.some( keyword => toCompare.includes( keyword ) ) ) {
-        desKeywordCount += 1;
+      if ( weeklyWords.some( keyword => toCompare.includes( keyword ) ) ) {
+        keywordCount += 1;
       }
     }
 
@@ -79,7 +80,7 @@ function analyze() {
     sentimentByUser.set( user, ( sentiment / messageCounts.get( user ) ) );
   }
 
-  return { sentimentByUser, desKeywordCount };
+  return { sentimentByUser, keywordCount };
 }
 
 function getGiphy() {
@@ -112,12 +113,15 @@ function getGiphy() {
 }
 
 async function createMessage( sentiments ) {
+  let header = `*Sentiment of the last 7 days (${ messages.size } messages )*`;
+  header += `:hammer_time:`;
+
   const msgBlocks = [
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: '*Sentiment of the last 1000 messages or 7 days* :hammer_time:'
+        text: header 
       }
     }
   ];
@@ -161,13 +165,14 @@ async function createMessage( sentiments ) {
 
   msgBlocks.push({ type: 'divider' });
 
-  const desText = `# of times Des said ${desWords.join(', ')}:`;
+  let keywordText = `# of times ${keywordUser} said `;
+  keywordText += `${weeklyWords.join(', ')}:`;
 
   msgBlocks.push({
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `${desText} ${sentiments.desKeywordCount}`
+      text: `${keywordText} ${sentiments.keywordCount}`
     }
   });
 
@@ -178,20 +183,47 @@ async function postToSlack( blocks ) {
   return slack.chat.postMessage({ channel: conf.sentiment_channel, blocks });
 }
 
-async function handler() {
-  try {
-    const { messages: data } = await fetchMessages();
+function isBlankorSlackBot( message ) {
+  const slackbot = 'USLACKBOT';
+  return !message.text || message.user && message.user === slackbot;
+}
 
-    for ( const message of data ) {
-      const slackbot = 'USLACKBOT';
+// Slack is a slut and sends some stupid UNIX string/float timestamp
+// converting it to a real UNIX timestamp thats accurate enough.
+function slackTsToTime( slackTs ) {
+  return Number( slackTs.replace('.','').slice( 0, -3 ) );
+}
 
-      if ( !message.text || !message.user || message.user === slackbot ) {
+async function fetchAllMessages() {
+  let fromFetch  = await fetchMessages();
+  let oldestMsg  = fromFetch.slice( -1 ).pop();
+  let oldestTime = slackTsToTime( oldestMsg.ts );
+  const oneWeek  = Date.now() - 6.048e8;
+
+  while ( oldestTime >= oneWeek ) {
+    fromFetch = await fetchMessages( oldestMsg.ts );
+
+    for ( const message of fromFetch ) {
+      if ( isBlankorSlackBot( message ) ) {
         continue;
+      }
+
+      // older than 1 week
+      if ( slackTsToTime( message.ts ) < oneWeek ) {
+        break;
       }
 
       messages.add( message );
     }
 
+    oldestMsg  = fromFetch.slice( -1 ).pop();
+    oldestTime = slackTsToTime( oldestMsg.ts );
+  }
+}
+
+async function handler() {
+  try {
+    await fetchAllMessages();
     await fetchUsers();
 
     const sentiments = analyze();
