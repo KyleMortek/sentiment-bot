@@ -200,7 +200,11 @@ async function fetchAllMessages() {
   let oldestTime = slackTsToTime( oldestMsg.ts );
   const oneWeek  = Date.now() - 6.048e8;
 
-  while ( oldestTime >= oneWeek ) {
+  // to avoid an infinite loop in case something goes wrong
+  const stopLimit = 20;
+  let count = 0;
+
+  while ( oldestTime >= oneWeek || count === stopLimit ) {
     fromFetch = await fetchMessages( oldestMsg.ts );
 
     for ( const message of fromFetch ) {
@@ -218,6 +222,7 @@ async function fetchAllMessages() {
 
     oldestMsg  = fromFetch.slice( -1 ).pop();
     oldestTime = slackTsToTime( oldestMsg.ts );
+    count++;
   }
 }
 
