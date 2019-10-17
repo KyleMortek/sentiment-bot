@@ -27,11 +27,12 @@ const weeklyWords = [
   'fuck'
 ];
 
-async function fetchMessages( latest = Date.now() ) {
+async function fetchMessages( latest = Date.now(), oldest = 0 ) {
   const response = await slack.channels.history({
     channel: conf.channel,
     count:   1000,
-    latest
+    latest,
+    oldest
   });
 
   return response.messages;
@@ -191,22 +192,28 @@ function isBlankorSlackBot( message ) {
 // Slack is a slut and sends some stupid UNIX string/float timestamp
 // converting it to a real UNIX timestamp thats accurate enough.
 function slackTsToTime( slackTs ) {
-  return Number( slackTs.replace('.','').slice( 0, -3 ) );
+  return Number( slackTs.replace( '.', '' ).slice( 0, -3 ) );
+}
+
+// Creates a slack ts from an actual UNIX date by padding it with 3 0's and
+// inserting '.' before the last 6 digits
+function createSlackTs( date ) {
+  let asString = String( date ).padEnd( 15, '9' );
+  let x = asString.slice( 0, -5 ) + '.' + asString.slice( -6 );
+  return x;
 }
 
 async function fetchAllMessages() {
-  let fromFetch  = await fetchMessages();
+  const oneWeek  = Date.now() - 6.048e8;
+  let fromFetch  = await fetchMessages( null, createSlackTs( oneWeek ) );
   let oldestMsg  = fromFetch.slice( -1 ).pop();
   let oldestTime = slackTsToTime( oldestMsg.ts );
-  const oneWeek  = Date.now() - 6.048e8;
 
   // to avoid an infinite loop in case something goes wrong
   const stopLimit = 20;
   let count = 0;
 
-  while ( oldestTime >= oneWeek || count === stopLimit ) {
-    fromFetch = await fetchMessages( oldestMsg.ts );
-
+  while ( oldestTime >= oneWeek && count != stopLimit ) {
     for ( const message of fromFetch ) {
       if ( isBlankorSlackBot( message ) ) {
         continue;
@@ -220,6 +227,7 @@ async function fetchAllMessages() {
       messages.add( message );
     }
 
+    fromFetch = await fetchMessages( oldestMsg.ts );
     oldestMsg  = fromFetch.slice( -1 ).pop();
     oldestTime = slackTsToTime( oldestMsg.ts );
     count++;
