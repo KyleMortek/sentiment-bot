@@ -1,20 +1,16 @@
-import { PipelineStep } from '../../types';
+import {
+  PipelineStep,
+  SlackMessage,
+  UserMap,
+  UserMapChatMeta
+} from '../../types';
 
-const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
-  console.log('creating message');
+function createHeader( messages: SlackMessage[] ): string {
+  const count = messages.length;
+  return `*Sentiment - last 7 days (${count} messages )* :hammer_time:`;
+}
 
-  let header = `*Sentiment of the last 7 days (${ messages.length } messages )*`;
-  header += `:hammer_time:`;
-
-  slackMsg.push({
-    type: 'section',
-    text: {
-      type: 'mrkdwn',
-      text: header 
-    }
-  });
-
-  let lowest = { name: '', sentiment: Infinity };
+function createScores( meta: UserMapChatMeta, users: UserMap ): string {
   let scores: string = '```                                    \n';
 
   for( const userId of Object.keys( meta ) ) {
@@ -23,18 +19,36 @@ const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
 
     // Add user's sentiment to message
     scores += `${(name + ':').padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
-
-    // Check if this user has the lowest (so far) sentiment score
-    lowest = sentiment < lowest.sentiment ? { name, sentiment } : lowest;
   }
 
   scores += '```';
+  return scores;
+}
+
+function findLowestScore( meta: UserMapChatMeta ): string {
+  let lowest: number = Infinity;
+  let user: string;
+
+  for ( const userId of Object.keys( meta ) ) {
+    const { sentiment } = meta[ userId ];
+
+    if ( sentiment < lowest ) {
+      lowest = sentiment;
+      user = userId;
+    }
+  }
+
+  return user;
+}
+
+const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
+  console.log('creating message');
 
   slackMsg.push({
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: scores
+      text: createHeader( messages ) 
     }
   });
 
@@ -42,7 +56,18 @@ const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `:biohazard_sign: *${lowest.name} toxic again this week.*`
+      text: createScores( meta, users )
+    }
+  });
+
+  const lowestUserId: string = findLowestScore( meta );
+  const lowestName: string = users[ lowestUserId ].real_name;
+
+  slackMsg.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `:biohazard_sign: *${lowestName} toxic again this week.*`
     }
   });
 };
