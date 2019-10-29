@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = {
+export default {
   // auth token for slack bot
   slack_token:       process.env.SLACK_TOKEN,
 
@@ -15,4 +15,4 @@ module.exports = {
 
   // use sample data
   use_sample:        process.env.SAMPLE
-}
+};
