@@ -13,12 +13,12 @@ function createHeader( messages: SlackMessage[] ): string {
 function createScores( meta: UserMapChatMeta, users: UserMap ): string {
   let scores: string = '```                                    \n';
 
-  for( const userId of Object.keys( meta ) ) {
+  for ( const userId of Object.keys( meta ) ) {
     const { real_name: name } = users[ userId ];
     const { sentiment } = meta[ userId ];
 
     // Add user's sentiment to message
-    scores += `${(name + ':').padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
+    scores += `${( name + ':' ).padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
   }
 
   scores += '```';
