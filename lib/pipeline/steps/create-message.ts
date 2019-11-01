@@ -1,3 +1,5 @@
+import lowestScore from '../../utils/lowest-score';
+
 import {
   PipelineStep,
   SlackMessage,
@@ -6,39 +8,38 @@ import {
 } from '../../types';
 
 function createHeader( messages: SlackMessage[] ): string {
-  const count = messages.length;
+  const count: number = messages.length;
   return `*Sentiment - last 7 days (${count} messages )* :hammer_time:`;
 }
 
-function createScores( meta: UserMapChatMeta, users: UserMap ): string {
-  let scores: string = '```                                    \n';
+function createMessageCounts( users: UserMap, meta: UserMapChatMeta): string {
+  let str: string = '```                                                  \n';
+  str += 'Message Counts: \n\n';
 
   for ( const userId of Object.keys( meta ) ) {
     const { real_name: name } = users[ userId ];
-    const { sentiment } = meta[ userId ];
+    const { msgCount }        = meta[ userId ];
+
+    // Add user's sentiment to message
+    str += `${( name + ':' ).padEnd( 20, ' ' )} ${msgCount}\n`;
+  }
+
+  return str + '```';
+}
+
+function createScores( meta: UserMapChatMeta, users: UserMap): string {
+  let scores: string = '```                                                \n';
+  scores += 'Sentiment: \n\n';
+
+  for ( const userId of Object.keys( meta ) ) {
+    const { real_name: name } = users[ userId ];
+    const { sentiment }       = meta[ userId ];
 
     // Add user's sentiment to message
     scores += `${( name + ':' ).padEnd( 20, ' ' )} ${sentiment.toFixed( 6 )}\n`;
   }
 
-  scores += '```';
-  return scores;
-}
-
-function findLowestScore( meta: UserMapChatMeta ): string {
-  let lowest: number = Infinity;
-  let user: string;
-
-  for ( const userId of Object.keys( meta ) ) {
-    const { sentiment } = meta[ userId ];
-
-    if ( sentiment < lowest ) {
-      lowest = sentiment;
-      user = userId;
-    }
-  }
-
-  return user;
+  return scores + '```';
 }
 
 const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
@@ -60,8 +61,16 @@ const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
     }
   });
 
-  const lowestUserId: string = findLowestScore( meta );
-  const lowestName: string = users[ lowestUserId ].real_name;
+  slackMsg.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: createMessageCounts( users, meta )
+    }
+  });
+
+  const lowestUserId: string = lowestScore.get().userId;
+  const lowestName: string   = users[ lowestUserId ].real_name;
 
   slackMsg.push({
     type: 'section',
