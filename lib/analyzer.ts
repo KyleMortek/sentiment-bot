@@ -15,8 +15,12 @@ export default function analyze(
 ): UserMapChatMeta {
   const metaData = emptyUserMetaDataObj( Object.keys( users ) );
 
-  for ( const { text, user } of messages ) {
+  for ( const message of messages ) {
+    const { text, user } = message;
     let sentiment: number = analyzer.getSentiment( text.split(' ') );
+
+    // add sentiment score to the message
+    message.sentiment = sentiment;
 
     // increase magnitude so scores arent so close
     if ( sentiment >= 1 || sentiment <= -1 ) {
