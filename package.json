@@ -4,12 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "deploy:aws": "./scripts/deploy.sh",
+    "deploy": "npm run build; npm run deploy:aws"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/web-api": "5.0.1",
-    "natural": "0.6.1"
+    "@slack/web-api": "5.4.0",
+    "natural": "0.6.3"
+  },
+  "devDependencies": {
+    "typescript": "^3.6.4"
   }
 }
