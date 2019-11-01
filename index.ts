@@ -4,7 +4,7 @@ import fetchUsers from './lib/fetch-users';
 import analyzer from './lib/analyzer';
 import pipeline from './lib/pipeline';
 
-export async function handler(): Promise<void> {
+export const handler = async(): Promise<void> => {
   // fetch the messages
   const messages: SlackMessage[] = await fetchMessages();
 
