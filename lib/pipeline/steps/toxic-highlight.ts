@@ -1,30 +1,23 @@
 import lowestScore from '../../utils/lowest-score';
-import { PipelineStep, SlackMessage } from '../../types';
+import { UserMap, PipelineStep, SlackMessage } from '../../types';
 
-// Worst 5 messages from the user
-function collectSample( messages: SlackMessage[] ): Array<string> {
+// Worst 5 messages
+function collectMostToxic(
+  messages: SlackMessage[],
+  users:    UserMap
+): Array<string> {
   return [ ...messages ]
     .sort( ( a, b ) => a.sentiment - b.sentiment )
     .splice( 0, 5 )
-    .map( message => '"' + message.text + '"' );
-}
-
-function messagesForUser(
-  id:       string,
-  messages: SlackMessage[]
-): SlackMessage[] {
-  return messages.filter( message => message.user === id );
+    .map( message => {
+      return `"${ message.text }" -${ users[ message.user ].real_name }`;
+    });
 }
 
 const toxicHighlights: PipelineStep = ({ users, messages, slackMsg, meta }) => {
-  console.log('adding highlights for toxic user');
+  console.log('adding highlights');
 
-  let messagesFromUser: SlackMessage[];
-  const lowestScoring: string = lowestScore.get().userId;
-
-  messagesFromUser = messagesForUser( lowestScoring, messages );
-
-  const sample: Array<string> = collectSample( messagesFromUser );
+  const highlights: Array<string> = collectMostToxic( messages, users );
 
   slackMsg.push({
     type: 'section',
@@ -38,7 +31,7 @@ const toxicHighlights: PipelineStep = ({ users, messages, slackMsg, meta }) => {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: '```' + sample.join('\n') + '```'
+      text: '```' + highlights.join('\n') + '```'
     }
   });
 };
