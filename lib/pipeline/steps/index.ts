@@ -7,7 +7,6 @@ import toxicHighlight from './toxic-highlight';
 const steps: PipelineStep[] = [
   createMessage,
   toxicHighlight,
-  addGiphy,
   sendSlackMsg
 ];
 

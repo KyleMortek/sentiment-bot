@@ -8,7 +8,7 @@ function collectMostToxic(
 ): Array<string> {
   return [ ...messages ]
     .sort( ( a, b ) => a.sentiment - b.sentiment )
-    .splice( 0, 5 )
+    .splice( 0, 10 )
     .map( message => {
       return `"${ message.text }" -${ users[ message.user ].real_name }`;
     });
