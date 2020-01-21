@@ -12,8 +12,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/web-api": "5.4.0",
-    "natural": "0.6.3"
+    "@hapi/joi": "17.1.0",
+    "@slack/web-api": "5.7.0",
+    "chalk": "3.0.0",
+    "mongodb": "3.5.1",
+    "natural": "0.6.3",
+    "ora": "4.0.3",
+    "save": "2.4.0"
   },
   "devDependencies": {
     "typescript": "^3.6.4"

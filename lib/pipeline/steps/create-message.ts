@@ -42,9 +42,7 @@ function createScores( meta: UserMapChatMeta, users: UserMap): string {
   return scores + '```';
 }
 
-const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
-  console.log('creating message');
-
+const step = ({ users, messages, slackMsg, meta }) => {
   slackMsg.push({
     type: 'section',
     text: {
@@ -79,6 +77,12 @@ const createMessage: PipelineStep = ({ users, messages, slackMsg, meta }) => {
       text: `:biohazard_sign: *${lowestName} toxic again this week.*`
     }
   });
+};
+
+const createMessage: PipelineStep = {
+  step,
+  preMsg: 'Creating slack message',
+  postMsg: 'Created slack message'
 };
 
 export default createMessage;

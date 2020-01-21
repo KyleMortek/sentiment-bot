@@ -5,21 +5,39 @@ import analyzer from './lib/analyzer';
 import pipeline from './lib/pipeline';
 import lowestScore from './lib/utils/lowest-score';
 import findLowestScore from './lib/utils/find-lowest-score';
+import ora = require('ora');
 
 export const handler = async(): Promise<void> => {
-  // fetch the messages
-  const messages: SlackMessage[] = await fetchMessages();
+  const Spinner = ora();
 
-  // fetch users
-  const users: UserMap = await fetchUsers( messages );
+  try {
+    // fetch the messages
+    Spinner.text = 'Fetching messages';
+    Spinner.start();
+    const messages: SlackMessage[] = await fetchMessages();
+    Spinner.succeed('Fetched messages');
 
-  // calculate sentiment scores, message counts, and any other meta data for
-  // each user
-  const meta: UserMapChatMeta = analyzer( users, messages ); 
+    // fetch users
+    Spinner.text = 'Fetching users';
+    Spinner.start();
+    const users: UserMap = await fetchUsers( messages );
+    Spinner.succeed('Fetched users');
 
-  // save info about who has the lowest score
-  lowestScore.set( findLowestScore( meta ) );
+    // calculate sentiment scores, message counts, and any other meta data for
+    // each user
+    Spinner.text = 'Calculating sentiment scores';
+    Spinner.start();
+    const meta: UserMapChatMeta = analyzer( users, messages ); 
+    Spinner.succeed('Calculated sentiment scores');
 
-  // Run the Data Pipeline
-  await pipeline({ users, messages, meta });
+    // save info about who has the lowest score
+    lowestScore.set( findLowestScore( meta ) );
+
+    // Run the Data Pipeline
+    await pipeline({ users, messages, meta });
+  } catch ( err ) {
+    Spinner.fail();
+    console.error( 'Failed with error: ', err );
+    process.exit( 1 );
+  }
 };

@@ -2,18 +2,18 @@ import slack from '../../slack';
 import { PipelineStep } from '../../types';
 import conf from '../../../config';
 
-const postToSlack: PipelineStep = async({ slackMsg }) => {
-  try {
-    console.log('posting to slack');
+const step = async({ slackMsg }) => {
+  await slack.chat.postMessage({
+    channel: conf.sentiment_channel,
+    blocks:  JSON.stringify( slackMsg ) as any,
+    text:    ''
+  });
+};
 
-    await slack.chat.postMessage({
-      channel: conf.sentiment_channel,
-      blocks: JSON.stringify( slackMsg ) as any,
-      text: ''
-    });
-  } catch( err ) {
-    console.error( 'Failed to send message: ', err );
-  }
+const postToSlack: PipelineStep = {
+  step,
+  preMsg:  'Posting to slack',
+  postMsg: 'Posted to slack'
 };
 
 export default postToSlack;

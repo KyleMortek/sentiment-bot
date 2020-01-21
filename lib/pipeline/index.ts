@@ -9,12 +9,24 @@
  */
 
 import steps from './steps';
+import ora = require('ora');
 
 async function pipeline({ users, messages, meta }): Promise<void> {
   const slackMsg: Array<any> = [];
+  const Spinner = ora();
 
-  for ( const step of steps ) {
-    await step({ users, messages, meta, slackMsg });
+  try {
+    for ( const pipelineStep of steps ) {
+      if ( pipelineStep.preMsg ) {
+        Spinner.text = pipelineStep.preMsg;
+        Spinner.start();
+      }
+      await pipelineStep.step({ users, messages, meta, slackMsg });
+      Spinner.succeed( pipelineStep.postMsg );
+    }
+  } catch ( err ) {
+    Spinner.fail();
+    console.error( 'Error: ', err );
   }
 };
 

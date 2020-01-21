@@ -30,7 +30,6 @@ export interface User {
   readonly is_ultra_restricted: boolean;
   readonly is_bot:              boolean;
   readonly is_app_user:         boolean;
-  readonly updated:             number;
   readonly has_2fa:             boolean;
 }
 
@@ -53,10 +52,12 @@ export interface PipelineStepArguments {
 }
 
 export interface PipelineStep {
-  ( PipelineStepArguments ): void
+  step( PipelineStepArguments ): void,
+  preMsg?:                       string,
+  postMsg?:                      string
 }
 
 export interface LowestScoreUser {
-  userId:  string;
-  score: number;
+  userId: string;
+  score:  number;
 }

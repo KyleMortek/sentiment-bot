@@ -14,9 +14,7 @@ function collectMostToxic(
     });
 }
 
-const toxicHighlights: PipelineStep = ({ users, messages, slackMsg, meta }) => {
-  console.log('adding highlights');
-
+const step = ({ users, messages, slackMsg, meta }) => {
   const highlights: Array<string> = collectMostToxic( messages, users );
 
   slackMsg.push({
@@ -34,6 +32,12 @@ const toxicHighlights: PipelineStep = ({ users, messages, slackMsg, meta }) => {
       text: '```' + highlights.join('\n') + '```'
     }
   });
+};
+
+const toxicHighlights: PipelineStep = {
+  step,
+  preMsg: 'Adding highlights to slack message',
+  postMsg: 'Added highlights to slack message'
 };
 
 export default toxicHighlights;
