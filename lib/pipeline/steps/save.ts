@@ -39,7 +39,15 @@ function saveMessages( messages: SlackMessage[] ): Promise<void> {
   let toInsert = [];
 
   for ( const msg of messages ) {
-    const model = new Message( msg );
+    const model = new Message({
+      attachments: msg.attachments,
+      sentiment:   msg.sentiment,
+      text:        msg.text,
+      ts:          msg.ts,
+      type:        msg.type,
+      user:        msg.user
+    });
+
     toInsert.push( model.data );
   }
 

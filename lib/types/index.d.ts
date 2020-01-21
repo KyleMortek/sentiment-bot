@@ -1,15 +1,10 @@
 export interface SlackMessage {
-  readonly ts:            string;
-  readonly text:          string;
-  readonly user:          string;
-  readonly type:          'message';
-  readonly team:          string;
-  readonly client_msg_id: string;
-  sentiment:              number;
-  readonly edited?: {
-    readonly user: string;
-    readonly ts:   string;
-  },
+  readonly ts:          string;
+  readonly text:        string;
+  readonly user:        string;
+  readonly type:        string;
+  readonly attachments: [];
+  sentiment:             number;
 }
 
 export interface User {

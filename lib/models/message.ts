@@ -3,13 +3,13 @@ import { SlackMessage } from '../types';
 import Model from '../classes/model';
 
 const schema = Joi.object({
-  edited:    Joi.object({ user: Joi.string(), ts: Joi.string() }),
-  sentiment: Joi.number().required(),
-  text:      Joi.string().required(),
-  ts:        Joi.string().required(),
-  type:      Joi.string().required(),
-  updated:   Joi.date(),
-  user:      Joi.string().required(),
+  attachments: Joi.array(),
+  sentiment:   Joi.number().required(),
+  text:        Joi.string().required(),
+  ts:          Joi.string().required(),
+  type:        Joi.string().required(),
+  updated:     Joi.date(),
+  user:        Joi.string().required()
 });
 
 interface MessageData extends SlackMessage {
