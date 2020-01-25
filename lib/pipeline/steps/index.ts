@@ -8,7 +8,7 @@ import conf from '../../../config';
 const steps: PipelineStep[] = [
   createMessage,
   toxicHighlight,
-  save
+  /* save */
 ];
 
 if ( !conf.dont_post ) {
