@@ -4,12 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "deploy:aws": "./scripts/deploy.sh",
+    "deploy": "npm run build; npm run deploy:aws"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/web-api": "5.0.1",
-    "natural": "0.6.1"
+    "@hapi/joi": "17.1.0",
+    "@slack/web-api": "5.7.0",
+    "chalk": "3.0.0",
+    "mongodb": "3.5.1",
+    "natural": "0.6.3",
+    "ora": "4.0.3",
+    "save": "2.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^3.6.4"
   }
 }
